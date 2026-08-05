@@ -1,0 +1,80 @@
+{
+  "pages": [
+    {
+      "page": 1,
+      "label": "URLA_1003",
+      "confidence": 0.98,
+      "reason": "Uniform Residential Loan Application(Form 1003) 제목과 신청서 양식이 확인됩니다."
+    },
+    {
+      "page": 2,
+      "label": "URLA_1003",
+      "confidence": 0.96,
+      "reason": "대출 신청서의 추가 정보와 서명란으로 구성된 연속 페이지입니다."
+    },
+    {
+      "page": 3,
+      "label": "INCOME_DOC",
+      "confidence": 0.97,
+      "reason": "급여 지급 내역, 근무 기간, 세전·세후 급여 항목이 있는 급여명세서입니다."
+    },
+    {
+      "page": 4,
+      "label": "INCOME_DOC",
+      "confidence": 0.95,
+      "reason": "W-2 Wage and Tax Statement 양식이 확인되는 소득 증빙입니다."
+    },
+    {
+      "page": 5,
+      "label": "CREDIT_REPORT",
+      "confidence": 0.99,
+      "reason": "신용 점수와 3개 신용평가사 계정 정보가 있는 Tri-merge 신용 보고서입니다."
+    },
+    {
+      "page": 6,
+      "label": "CREDIT_REPORT",
+      "confidence": 0.97,
+      "reason": "신용 계정·조회 기록이 이어지는 신용 보고서 페이지입니다."
+    },
+    {
+      "page": 7,
+      "label": "TITLE_REPORT",
+      "confidence": 0.98,
+      "reason": "Preliminary Title Report 제목과 부동산 권원 정보가 확인됩니다."
+    }
+  ],
+  "documents": [
+    {
+      "document_type": "URLA_1003",
+      "document_name": "Uniform Residential Loan Application (Form 1003) / 대출 신청서",
+      "start_page": 1,
+      "end_page": 2,
+      "pages": [1, 2],
+      "average_confidence": 0.97
+    },
+    {
+      "document_type": "INCOME_DOC",
+      "document_name": "Paystub, W-2, 1040, 1099, VOE 등 소득 증빙",
+      "start_page": 3,
+      "end_page": 4,
+      "pages": [3, 4],
+      "average_confidence": 0.96
+    },
+    {
+      "document_type": "CREDIT_REPORT",
+      "document_name": "Tri-merge Credit Report / 신용 보고서",
+      "start_page": 5,
+      "end_page": 6,
+      "pages": [5, 6],
+      "average_confidence": 0.98
+    },
+    {
+      "document_type": "TITLE_REPORT",
+      "document_name": "Title Commitment 또는 Preliminary Title Report / 권원 보고서",
+      "start_page": 7,
+      "end_page": 7,
+      "pages": [7],
+      "average_confidence": 0.98
+    }
+  ]
+}
