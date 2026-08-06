@@ -1,0 +1,43 @@
+﻿document_type,document_name,start_page,end_page,pages,pdf_pages,average_confidence
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,2,5,2,1,0.95
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,1,1,2,1
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,1,5,1,3,0.95
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,1,1,4,1
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,5,5,5,5,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,8,9,8,6,1
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,5,5,5,7,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,9,1,8,1
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,3,5,3,9,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,9,9,9,10,1
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,1,1,1,11,0.95
+INCOME_DOC,"Paystub, W-2, 1040, 1099, VOE 등 소득 증빙",1,2,1,12,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,13,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,1,1,14,1
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,4,5,4,15,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,16,0.95
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,1,5,1,17,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,18,0.95
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,1,1,19,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,20,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,7,9,7,21,1
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,4,5,4,22,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,23,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,1,1,1,24,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,25,1
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,1,1,1,26,1
+INCOME_DOC,"Paystub, W-2, 1040, 1099, VOE 등 소득 증빙",1,2,1,27,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,5,9,5,28,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,29,0.98
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,1,1,1,30,1
+INCOME_DOC,"Paystub, W-2, 1040, 1099, VOE 등 소득 증빙",1,2,"2,1","31,32",1.0
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,3,5,3,33,0.95
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,2,9,2,34,0.95
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,35,0.95
+INCOME_DOC,"Paystub, W-2, 1040, 1099, VOE 등 소득 증빙",1,1,1,36,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,37,0.95
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,3,9,3,38,1
+OTHER,위 항목에 속하지 않거나 판별이 어려운 페이지,1,2,"2,1","39,40",1.0
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,6,9,6,41,1
+TITLE_REPORT,Title Commitment 또는 Preliminary Title Report / 권원 보고서,2,5,2,42,1
+URLA_1003,Uniform Residential Loan Application (Form 1003) / 대출 신청서,1,1,1,43,1
+CREDIT_REPORT,Tri-merge Credit Report / 신용 보고서,4,9,4,44,1
