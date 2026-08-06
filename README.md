@@ -16,7 +16,7 @@
 ## 2. 실행
 
 1. Ollama 설치 (다운로드 링크:https://ollama.com/download)
-2. 마우스 우클릭 -> 터미널에서 열기
+2. download ZIP -> 압축 해제 후 경로로 들어가 마우스 우클릭 -> 터미널에서 열기
 3. 아래 쉘 명령어 입력
 ```bash
 python -m venv .venv (python명령어 오류 시 python3 사용)
