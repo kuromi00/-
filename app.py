@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import base64
 import csv
 import io
 import json
 import os
+import re
 from pathlib import Path
 from urllib.error import URLError
 from urllib.request import Request, urlopen
@@ -26,7 +29,9 @@ DEMO_RESULT_PATH = BASE_DIR / "demo_result.json"
 SYSTEM_PROMPT = """You classify one page from a US mortgage-loan document package.
 Choose exactly one label from: URLA_1003, INCOME_DOC, CREDIT_REPORT, TITLE_REPORT, OTHER.
 Use the visual layout and readable document text. Do not infer a label merely from a borrower name.
-Return valid JSON only, with keys label, confidence (0 to 1), and reason (a short Korean explanation).
+Also read the printed document page indicator in the header or footer, such as "Page 1 of 12" or "Page 1 to 12".
+Return valid JSON only, with keys label, confidence (0 to 1), reason (a short Korean explanation), document_page (integer or null), and document_page_total (integer or null).
+Do not truncate two-digit page totals: for "Page 1 of 12", document_page_total must be 12.
 """
 OLLAMA_PROMPT = SYSTEM_PROMPT + "\nClassify this image now."
 
@@ -37,14 +42,25 @@ class PageResult:
     label: str
     confidence: float
     reason: str
+    document_page: int | None = None
+    document_page_total: int | None = None
 
 
+# 이미지 분석 해상도
 def render_page(page: fitz.Page, zoom: float = 1.5) -> bytes:
     pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
     return pix.tobytes("png")
 
 
-def parse_classification(raw: str) -> tuple[str, float, str]:
+def parse_page_number(value: object) -> int | None:
+    try:
+        number = int(str(value).strip())
+        return number if number > 0 else None
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_classification(raw: str) -> tuple[str, float, str, int | None, int | None]:
     raw = raw.strip()
     if raw.startswith("```"):
         raw = raw.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -52,10 +68,20 @@ def parse_classification(raw: str) -> tuple[str, float, str]:
     label = result.get("label", "OTHER")
     if label not in LABELS:
         label = "OTHER"
-    return label, max(0, min(1, float(result.get("confidence", 0)))), str(result.get("reason", ""))
+    document_page = parse_page_number(result.get("document_page"))
+    document_page_total = parse_page_number(result.get("document_page_total"))
+    if document_page and document_page_total and document_page > document_page_total:
+        document_page, document_page_total = None, None
+    return (
+        label,
+        max(0, min(1, float(result.get("confidence", 0)))),
+        str(result.get("reason", "")),
+        document_page,
+        document_page_total,
+    )
 
 
-def classify_page(client: OpenAI, image_bytes: bytes, model: str) -> tuple[str, float, str]:
+def classify_page(client: OpenAI, image_bytes: bytes, model: str) -> tuple[str, float, str, int | None, int | None]:
     image_url = "data:image/png;base64," + base64.b64encode(image_bytes).decode("ascii")
     response = client.responses.create(
         model=model,
@@ -67,7 +93,7 @@ def classify_page(client: OpenAI, image_bytes: bytes, model: str) -> tuple[str, 
     return parse_classification(response.output_text)
 
 
-def classify_page_ollama(image_bytes: bytes, model: str, host: str) -> tuple[str, float, str]:
+def classify_page_ollama(image_bytes: bytes, model: str, host: str) -> tuple[str, float, str, int | None, int | None]:
     """Ollama의 로컬 REST API로 PDF 페이지 이미지를 비전 AI 분석합니다."""
     body = {
         "model": model,
@@ -87,7 +113,7 @@ def classify_page_ollama(image_bytes: bytes, model: str, host: str) -> tuple[str
     return parse_classification(payload["message"]["content"])
 
 
-def classify_page_demo(page: fitz.Page) -> tuple[str, float, str]:
+def classify_page_demo(page: fitz.Page) -> tuple[str, float, str, int | None, int | None]:
     """API 키 없이 업로드한 PDF 전체를 시연하기 위한 로컬 판정기입니다."""
     text = page.get_text("text").lower()
     rules = [
@@ -99,28 +125,66 @@ def classify_page_demo(page: fitz.Page) -> tuple[str, float, str]:
     for label, keywords, reason in rules:
         matched = [keyword for keyword in keywords if keyword in text]
         if matched:
-            return label, 0.80, f"데모 판정: {reason}를 확인했습니다 ({matched[0]})."
+            return label, 0.80, f"데모 판정: {reason}를 확인했습니다 ({matched[0]}).", None, None
     if not text.strip():
-        return "OTHER", 0.30, "데모 판정: 스캔 이미지 페이지여서 추출 가능한 텍스트가 없습니다."
-    return "OTHER", 0.45, "데모 판정: 지정된 문서 유형을 가리키는 대표 문구를 찾지 못했습니다."
+        return "OTHER", 0.30, "데모 판정: 스캔 이미지 페이지여서 추출 가능한 텍스트가 없습니다.", None, None
+    return "OTHER", 0.45, "데모 판정: 지정된 문서 유형을 가리키는 대표 문구를 찾지 못했습니다.", None, None
+
+
+def extract_document_page_info(page: fitz.Page) -> tuple[int | None, int | None]:
+    """문서 본문에 인쇄된 'Page 1 of 5' 또는 'Page 1 to 5' 표기를 읽습니다."""
+    text = page.get_text("text")
+    match = re.search(
+        r"(?:\bpage|페이지)\s*(?:no\.?\s*)?(\d{1,4})\s*(?:of|to|/|[-–])\s*(\d{1,4})",
+        text,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return int(match.group(1)), int(match.group(2))
+
+    match = re.search(r"(?:\bpage|페이지)\s*(\d+)\b", text, flags=re.IGNORECASE)
+    if match:
+        return int(match.group(1)), None
+    return None, None
+
+
+def make_page_result(
+    pdf_page: int,
+    source_page: fitz.Page,
+    label: str,
+    confidence: float,
+    reason: str,
+    ai_document_page: int | None = None,
+    ai_document_page_total: int | None = None,
+) -> PageResult:
+    document_page, document_page_total = extract_document_page_info(source_page)
+    document_page = document_page or ai_document_page
+    document_page_total = document_page_total or ai_document_page_total
+    return PageResult(pdf_page, label, confidence, reason, document_page, document_page_total)
 
 
 def group_pages(pages: list[PageResult]) -> list[dict]:
     groups = []
     for result in pages:
+        displayed_page = result.document_page if result.document_page is not None else 1
+        displayed_end = result.document_page_total or displayed_page
         if not groups or groups[-1]["document_type"] != result.label:
             groups.append({
                 "document_type": result.label,
                 "document_name": LABELS[result.label],
-                "start_page": result.page,
-                "end_page": result.page,
-                "pages": [result.page],
+                "start_page": displayed_page,
+                "end_page": displayed_end,
+                "pages": [displayed_page],
+                "pdf_pages": [result.page],
                 "average_confidence": result.confidence,
             })
         else:
             group = groups[-1]
-            group["end_page"] = result.page
-            group["pages"].append(result.page)
+            group["start_page"] = min(group["start_page"], displayed_page)
+            group["end_page"] = max(group["end_page"], displayed_end)
+            if displayed_page not in group["pages"]:
+                group["pages"].append(displayed_page)
+            group["pdf_pages"].append(result.page)
             count = len(group["pages"])
             group["average_confidence"] = round(
                 ((group["average_confidence"] * (count - 1)) + result.confidence) / count, 3
@@ -130,16 +194,20 @@ def group_pages(pages: list[PageResult]) -> list[dict]:
 
 def csv_bytes(groups: list[dict]) -> bytes:
     output = io.StringIO()
-    writer = csv.DictWriter(output, fieldnames=["document_type", "document_name", "start_page", "end_page", "pages", "average_confidence"])
+    writer = csv.DictWriter(output, fieldnames=["document_type", "document_name", "start_page", "end_page", "pages", "pdf_pages", "average_confidence"])
     writer.writeheader()
-    writer.writerows([{**group, "pages": ",".join(map(str, group["pages"]))} for group in groups])
+    writer.writerows([{
+        **group,
+        "pages": ",".join(map(str, group["pages"])),
+        "pdf_pages": ",".join(map(str, group["pdf_pages"])),
+    } for group in groups])
     return output.getvalue().encode("utf-8-sig")
 
 
 def load_demo_results() -> tuple[list[PageResult], list[dict]]:
     data = json.loads(DEMO_RESULT_PATH.read_text(encoding="utf-8"))
     pages = [PageResult(**item) for item in data["pages"]]
-    return pages, data["documents"]
+    return pages, group_pages(pages)
 
 
 st.set_page_config(page_title="대출 서류 AI 분류", page_icon="📄", layout="wide")
@@ -147,15 +215,15 @@ st.title("📄 대출 서류 AI 분류기")
 st.caption("하나의 PDF에서 페이지 유형을 판별하고, 연속된 같은 유형의 페이지를 문서 단위로 묶습니다.")
 
 with st.sidebar:
-    st.header("설정")
-    api_key = st.text_input("OpenAI API Key", value=os.getenv("OPENAI_API_KEY", ""), type="password")
-    model = st.text_input("모델", value=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"))
-    st.caption("API 키는 이 실행 세션에서만 사용되며 저장하지 않습니다.")
-    st.divider()
-    st.subheader("로컬 AI (Ollama)")
+    st.header("Ollama")
     ollama_model = st.text_input("Ollama 비전 모델", value=os.getenv("OLLAMA_MODEL", "gemma3"))
     ollama_host = st.text_input("Ollama 주소", value=os.getenv("OLLAMA_HOST", "http://localhost:11434"))
     st.caption("Ollama와 비전 모델이 설치돼 있으면 API 키 없이 분석합니다.")
+    st.divider()
+    st.subheader("OpenAI")
+    api_key = st.text_input("OpenAI API Key", value=os.getenv("OPENAI_API_KEY", ""), type="password")
+    model = st.text_input("모델", value=os.getenv("OPENAI_MODEL", "gpt-4.1-mini"))
+    st.caption("API 키는 이 실행 세션에서만 사용되며 저장하지 않습니다.")
 
 uploaded = st.file_uploader("분류할 PDF를 올려주세요", type="pdf")
 
@@ -171,34 +239,34 @@ uploaded = st.file_uploader("분류할 PDF를 올려주세요", type="pdf")
 if uploaded:
     document = fitz.open(stream=uploaded.getvalue(), filetype="pdf")
     st.info(f"총 {len(document)}페이지를 찾았습니다.")
-    action_col, ollama_action_col, demo_action_col = st.columns(3)
-    with action_col:
-        run_ai = st.button("AI로 분류 시작", type="primary")
+    ollama_action_col, action_col = st.columns(2)
     with ollama_action_col:
-        run_ollama = st.button("로컬 AI로 전체 분석")
-    with demo_action_col:
-        run_pdf_demo = st.button("데모 모드: 전체 페이지 분석")
+        run_ollama = st.button("AI로 분류 시작(Ollama)", type="primary")
+    with action_col:
+        run_ai = st.button("AI로 분류 시작(OpenAI)")
+    # with demo_action_col:
+    #     run_pdf_demo = st.button("데모 모드")
 
-    if run_pdf_demo:
-        results = []
-        progress = st.progress(0, text="업로드한 PDF의 모든 페이지를 데모 분석 중")
-        for index, page in enumerate(document):
-            label, confidence, reason = classify_page_demo(page)
-            results.append(PageResult(index + 1, label, confidence, reason))
-            progress.progress((index + 1) / len(document), text=f"{index + 1}/{len(document)} 페이지 판정 완료")
-        st.session_state["results"] = results
-        st.session_state["groups"] = group_pages(results)
-        st.session_state["result_source"] = "uploaded_demo"
-        progress.empty()
-        st.success(f"업로드한 PDF의 전체 {len(document)}페이지 결과를 생성했습니다.")
+    # if run_pdf_demo:
+    #     results = []
+    #     progress = st.progress(0, text="업로드한 PDF의 모든 페이지를 데모 분석 중")
+    #     for index, page in enumerate(document):
+    #         label, confidence, reason, document_page, document_page_total = classify_page_demo(page)
+    #         results.append(make_page_result(index + 1, page, label, confidence, reason, document_page, document_page_total))
+    #         progress.progress((index + 1) / len(document), text=f"{index + 1}/{len(document)} 페이지 판정 완료")
+    #     st.session_state["results"] = results
+    #     st.session_state["groups"] = group_pages(results)
+    #     st.session_state["result_source"] = "uploaded_demo"
+    #     progress.empty()
+    #     st.success(f"업로드한 PDF의 전체 {len(document)}페이지 결과를 생성했습니다.")
 
     if run_ollama:
         results = []
         progress = st.progress(0, text="로컬 AI가 모든 페이지를 분석 중입니다.")
         try:
             for index, page in enumerate(document):
-                label, confidence, reason = classify_page_ollama(render_page(page), ollama_model, ollama_host)
-                results.append(PageResult(index + 1, label, confidence, reason))
+                label, confidence, reason, document_page, document_page_total = classify_page_ollama(render_page(page), ollama_model, ollama_host)
+                results.append(make_page_result(index + 1, page, label, confidence, reason, document_page, document_page_total))
                 progress.progress((index + 1) / len(document), text=f"{index + 1}/{len(document)} 페이지 AI 분석 완료")
         except (URLError, TimeoutError, KeyError, ValueError, json.JSONDecodeError) as exc:
             progress.empty()
@@ -221,8 +289,8 @@ if uploaded:
             try:
                 for index, page in enumerate(document):
                     image = render_page(page)
-                    label, confidence, reason = classify_page(client, image, model)
-                    results.append(PageResult(index + 1, label, confidence, reason))
+                    label, confidence, reason, document_page, document_page_total = classify_page(client, image, model)
+                    results.append(make_page_result(index + 1, page, label, confidence, reason, document_page, document_page_total))
                     progress.progress((index + 1) / len(document), text=f"{index + 1}/{len(document)} 페이지 분석 중")
             except Exception as exc:
                 st.error(f"분석 중 오류가 발생했습니다: {exc}")
@@ -242,6 +310,7 @@ if "groups" in st.session_state:
     elif st.session_state.get("result_source") == "ollama":
         st.success("결과는 내 컴퓨터에서 실행된 Ollama 로컬 비전 AI가 생성했습니다. OpenAI API 키는 사용하지 않았습니다.")
     st.subheader("문서 단위 결과")
+    st.caption("start_page·end_page·pages는 문서 안에 인쇄된 페이지 표기(Page 1 of 5 등)를 사용하며, 표기가 없으면 모두 1로 표시합니다. pdf_pages는 업로드한 PDF의 실제 페이지 번호입니다.")
     st.dataframe(groups, use_container_width=True, hide_index=True)
     col1, col2 = st.columns(2)
     with col1:
