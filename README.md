@@ -27,7 +27,7 @@ pip install -r requirements.txt (pip명령어 오류 시 pip3 사용)
 ollama pull gemma3
 streamlit run app.py
 ```
-3. 브라우저가 열리면 PDF를 올린 뒤 AI로 분류 시작(Ollama)을 누릅니다.
+5. 브라우저가 열리면 PDF를 올린 뒤 AI로 분류 시작(Ollama)을 누릅니다.
 - 해당 모델은 모든 페이지 이미지를 로컬에서 분석하므로 OpenAI API 키나 외부 전송이 필요 없습니다.
 - Ollama가 실행 중이지 않거나 모델이 설치되지 않았으면 앱이 안내 메시지를 표시합니다.
 
