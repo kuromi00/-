@@ -61,13 +61,16 @@ streamlit run app.py
 개발 AI툴: ChatGPT 5.6 Terra (추론 강도: 중간)
 - 모델에는 Luna,Terra,Sol이 있으며, Sol의 경우 성능에 있어서 코딩에 가장 적합한 모델이긴 하나, 속도에 있어서는 가장 느리고 복잡한 코딩 위주 모델이므로 그 중간급인 Terra가 코딩테스트에 가장 적합한 모델로 판단하여 선택함.
 - 추론 강도가 너무 높을 경우 모델 토큰 소진량이 빨라 효율이 떨어지기에 개발에 필요한 만큼만 설정함.
+
 사용 언어: Python
 - AI개발엔 여러 라이브러리가 필요한데, C,Java,C++로는 해당 라이브러리들을 구현하는 데 한계가 있으며, 개발 난이도가 매우 복잡한 경향이 있음.
 - 따라서 구현에 필요한 여러 라이브러리를 import하기에 쉽고 유리한 Python언어를 선택함.
+
 사용 라이브러리: Streamlit, PyMuPDF, Json, csv
 - Streamlit: 웹 화면을 구현하며, PDF 업로드와, 진행률 표시, 표, 다운로드 기능을 짧은 코드로 제공. html,css,javascript없이 웹 페이지 화면을 구현할 수 있다.
 - PyMuPDF(flitz): 업로드한 PDF의 페이지를 읽고 이미지로 렌더링하고 텍스트로 추출한다.
 - Json, csv: AI분석결과를 각각의 파일로 저장하는 역할을 한다.
+
 사용 AI모델: Ollama gemma3
 - OpenAI의 ChatGPT와 Gemini의 경우 API키가 필요하며, 해당 API키를 사용하려면 사용한 만큼 비용이 발생하는 문제가 있어 API키 없이 로컬에서도 작동되는 LLM인 Ollama의 gemma3를 선택함.
 - gemma4의 경우 파일 용량이 크며, 분석 시간이 오래 걸리고 분석 결과가 gemma3랑 크게 차이가 없는 모습을 보여 분석 시간이 비교적 짧은 gemma3를 선택함.
