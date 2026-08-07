@@ -18,6 +18,7 @@
 1. Python 설치 (다운로드 링크:https://www.python.org/downloads/)
 2. Ollama 설치 (다운로드 링크:https://ollama.com/download)
 3. download ZIP -> 압축 해제 후 경로로 들어가 마우스 우클릭 -> 터미널에서 열기(또는 PowerShell/명령 프롬프트에서 열기)
+
    (mac/Linux의 경우 download ZIP -> 압축 해제 후 해당 파일들이 있는 경로 복사 -> 터미널 실행 -> cd ctrl(command)+V)
 5. 아래 쉘 명령어 입력
 ```bash
