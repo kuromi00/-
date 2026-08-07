@@ -21,7 +21,9 @@
 4. 아래 쉘 명령어 입력
 ```bash
 python -m venv .venv (python명령어 오류 시 python3 사용)
-source .venv/bin/activate
+(Windows)Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+(Windows).\.venv\Scripts\Activate.ps1
+(mac,Linux)source .venv/bin/activate
 pip install -r requirements.txt (pip명령어 오류 시 pip3 사용)
 (필요 시 선택사항) export OPENAI_API_KEY="API키 입력"
 ollama pull gemma3
